@@ -1,6 +1,6 @@
 function [ivZT, remove_rows] = SeverityScore(ivT, includeER)
     
-    ivZT = ivT(:, {'ID', 'Sex', 'Strain', 'Acquire'});
+    ivZT = ivT(:, {'ID', 'Sex', 'Treatment', 'Acquire'});
 
     % all metrics are measured from training epoch. remove animals that
     % haven't done the training epoch yet. 
@@ -41,7 +41,7 @@ function [ivZT, remove_rows] = SeverityScore(ivT, includeER)
     end
 
     varnames = ivZT.Properties.VariableNames;
-    prednames = varnames(varnames ~= "ID" & varnames ~= "Sex" & varnames ~= "Strain" & varnames ~= "Acquire");
+    prednames = varnames(varnames ~= "ID" & varnames ~= "Sex" & varnames ~= "Treatment" & varnames ~= "Acquire");
 
     % get Severity scores and classes
     Severity = nansum(ivZT{:, prednames}')';

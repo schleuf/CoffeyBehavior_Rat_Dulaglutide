@@ -25,22 +25,9 @@ function [Acquire] = getAcquire(mT, acquisition_thresh, acquisition_testPeriod, 
 
 
     for id=1:height(IDs)
-        % SSnote: this should be using sessionType instead of the Session#
-        % idx = mT.TagNumber==IDs(id) & mT.Session>9 & mT.Session <16;
         idx = mT.TagNumber==IDs(id) & ismember(mT.Session, testSessions);
         Acq(id,1) = mean(mT.EarnedInfusions(idx)) > acquisition_thresh;
         acqDist(id,1) = mean(mT.EarnedInfusions(idx));
-        
-        disp(IDs(id))
-        if ~Acq(id,1)
-            
-            disp(acqDist(id,1))
-            if isnan(acqDist(id,1))
-                disp(mT.EarnedInfusions(idx))
-            end
-            
-        end
-        disp(' ')
 
         if Acq(id) == 0 % && sum(idx) ~= 0
             status = 'NonAcquire';

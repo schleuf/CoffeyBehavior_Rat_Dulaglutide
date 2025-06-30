@@ -1,6 +1,6 @@
 function [ivT] = GetMetrics(mT)
     
-    IVmetrics = ["ID", "Sex", "Strain", "Acquire", "Intake", "Seeking", "Association", "Escalation"...
+    IVmetrics = ["ID", "Sex", "Treatment", "Acquire", "Intake", "Seeking", "Association", "Escalation"...
                  "Extinction", "Persistence", "Flexibility", "Relapse", "Recall"];  
     numNonMets = 4; % refers to the first 3 elements of IVmetrics being labels rather than numeric metrics
     ID = unique(mT.TagNumber);
@@ -15,7 +15,7 @@ function [ivT] = GetMetrics(mT)
         this_ID = mT.TagNumber == ID(i);
         ivT.ID(i) = ID(i);
         ivT.Sex(i) = unique(mT.Sex(this_ID));
-        ivT.Strain(i) = unique(mT.Strain(this_ID));
+        ivT.Treatment(i) = unique(mT.Treatment(this_ID));
         ivT.Acquire(i) = unique(mT.Acquire(this_ID));
         ivT.Intake(i) = nanmean(mT.Intake(this_ID & mT.sessionType == 'Training'));
         ivT.Seeking(i) = nanmean(mT.HeadEntries(this_ID &  mT.sessionType =='Training'));

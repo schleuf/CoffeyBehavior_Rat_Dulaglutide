@@ -1,9 +1,9 @@
-function [mT] = createMasterTable(beh_datapath, masterKey_flnm, experimentKey_flnm, savename)
+function [mT] = createMasterTable(beh_datapath, masterKey_flnm, experimentKey_flnm, savename, maxLatency)
     showWarnings = false;
     
     % Import Master Key
     opts = detectImportOptions(masterKey_flnm);
-    opts = setvartype(opts,{'TagNumber','ID','Cage','Sex','TimeOfBehavior', 'Treatment'},'categorical'); % Must be variables in the master key
+    opts = setvartype(opts,{'TagNumber', 'ID', 'Cage', 'Sex', 'TimeOfBehavior', 'SessionWeightUpdated', 'Treatment'},'categorical'); % Must be variables in the master key
     mKey=readtable(masterKey_flnm,opts);
     
     % Import Experiment Keyp.
@@ -29,7 +29,7 @@ function [mT] = createMasterTable(beh_datapath, masterKey_flnm, experimentKey_fl
                 [varTable, eventCode, eventTime] = importRatOralSA(fullfile(Files(i).folder, Files(i).name));
                 
                 % Calculate Variables Using Raw Data
-                [varTable] = rawVariableExtractor(varTable, eventCode, eventTime);
+                [varTable] = rawVariableExtractor(varTable, eventCode, eventTime, maxLatency);
                
                 % Find this animal's index in mKey
                 tag = varTable.TagNumber(height(varTable));
@@ -102,8 +102,10 @@ function [mT] = createMasterTable(beh_datapath, masterKey_flnm, experimentKey_fl
                     seekHE = HE(unique(cell2mat(seekHE(~cellfun(@isempty, seekHE)))));
                     seekLP = arrayfun(@(x) find(actLP < x, 1, 'last'), seekHE, 'UniformOutput', false);
                     seekLP = actLP(unique(cell2mat(seekLP(~cellfun(@isempty, seekLP)))));
-                    varTable.allLatency = {seekHE-seekLP};
-                    varTable.Latency = mean(varTable.allLatency{1});
+                    allLatency = seekHE-seekLP;
+                    allLatency = allLatency(allLatency<maxLatency);
+                    varTable.allLatency = {allLatency};
+                    varTable.Latency = mean(allLatency);
                 end
                 
                 % Concatenate the Master Table
@@ -115,7 +117,7 @@ function [mT] = createMasterTable(beh_datapath, masterKey_flnm, experimentKey_fl
     end
     
     % Join Master Variable Table with Key to Include Grouping Variables
-    mT=innerjoin(mT,mKey,'Keys',{'TagNumber'},'RightVariables',{'Sex','TimeOfBehavior','Chamber', 'Treatment'});
+    mT=innerjoin(mT,mKey,'Keys',{'TagNumber'},'RightVariables',{'Sex','TimeOfBehavior','Chamber', 'SessionWeightUpdated', 'Treatment'});
     
     %%
     save(savename,'mT');

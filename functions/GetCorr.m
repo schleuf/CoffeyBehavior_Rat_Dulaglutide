@@ -15,7 +15,7 @@ function [correlations] = GetCorr(ivZT, z_suff, corrGroups, sub_dir, groupOralFe
             correlations.(suff_str(2:end)) = struct;
             correlations.(suff_str(2:end)).ivZT_inds = find(use_inds);   
             prednames = ivZT.Properties.VariableNames;
-            prednames = prednames(~ismember(prednames, {'ID', 'Strain', 'Sex', 'Acquire', 'Severity', 'Class'}));
+            prednames = prednames(~ismember(prednames, {'ID', 'Treatment', 'Sex', 'Acquire', 'Severity', 'Class'}));
             correlations.(suff_str(2:end)).ct = corr(ivZT{find(use_inds),prednames},Type='Pearson');
             correlations.(suff_str(2:end)).prednames = prednames;
             if groupOralFentOutput_figs

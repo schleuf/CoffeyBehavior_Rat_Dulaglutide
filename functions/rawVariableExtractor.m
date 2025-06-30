@@ -1,4 +1,4 @@
-function [varTable] = rawVariableExtractor(varTable, eventCode, eventTime)
+function [varTable] = rawVariableExtractor(varTable, eventCode, eventTime, maxLatency)
 % rawVariableExtractor takes the raw event times for mouse oral SA and
 % calculates variables of interest and adds them to the varTable
 %
@@ -81,13 +81,19 @@ function [varTable] = rawVariableExtractor(varTable, eventCode, eventTime)
     % calculate all and mean latency
     varTable.allLatency = {time_HE_following_rewLP - time_rewLP_preceding_HE};
     trimLatency=varTable.allLatency{1};
-    varTable.Latency = mean(trimLatency(trimLatency<360)); % Setting Max Latency to 360s 
-    varTable.Latency(isempty(varTable.allLatency{1})) = NaN;
-
-    % if (varTable.Session > 15) && (varTable.Session <=26)
-    %     disp('bleh');
-    % end
-    
+    trimLatency = trimLatency(trimLatency <= maxLatency); % Setting Max Latency 
+    if isempty(trimLatency)
+        varTable.Latency = NaN;
+    else
+        varTable.Latency = mean(trimLatency); 
+    end
+    varTable.allLatency{1} = trimLatency;
+    if any(trimLatency>maxLatency)
+        disp('wtf')
+    end
+    if varTable.Latency > maxLatency
+        disp('wtffff')
+    end
     % get number of active and inactive lever presses that occur during ITI
     % SSnote: these are encoded as 20 and 21, don't need to calc them 
     varTable.itiActiveLever= varTable.ActiveLever - varTable.EarnedInfusions;

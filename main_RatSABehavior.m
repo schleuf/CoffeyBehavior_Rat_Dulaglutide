@@ -46,17 +46,17 @@ experimentKey_flnm = '.\Experiment Key.xlsx';
 %                       value giving the number of days to average across, or it will default to 1.  
 %   pAcq:true: plot aquisition histogram to choose threshold
 
-runNum = '2'; 
-runType = 'SA'; 
-createNewMasterTable = false; 
+runNum = '1'; 
+runType = 'ER'; 
+createNewMasterTable = true; 
 firstHour = false; 
 excludeData = true; 
 acquisition_thresh = 10; 
-acquisition_testPeriod = {'Training', 'first', 5};
+acquisition_testPeriod = {'Training', 'last', 5};
+maxLatency = 360; % maximum time in seconds between an active lever press and head entry to be factored into latency calculations
 interpWeights = true;
-interpWeight_sessions = [0,6,11,16,21];
 run_BE_analysis = false;
-run_withinSession_analysis = false;
+run_withinSession_analysis = true;
 run_individualSusceptibility_analysis = false;
 
 % FIGURE SETTINGS
@@ -71,11 +71,11 @@ run_individualSusceptibility_analysis = false;
 %   figsave_type: Cell of char variables listing all image data types to save figures as
 saveTabs = true;
 pAcq = true;
-dailyFigs = false;
-pubFigs = true;
-indivIntake_figs = false;
+dailyFigs = true;
+pubFigs = false;
+indivIntake_figs = true;
 groupIntake_figs = false;
-groupOralFentOutput_figs = false;
+groupOralFentOutput_figs = true;
 figsave_type = {'.png', '.pdf'};
 
 % color settings chosen for publication figures. SSnote: haven't been implemented across most figure-generating functions yet. 
@@ -102,7 +102,6 @@ groupIntakefigs_savepath ='Group Intake Figures\';
 groupOralFentOutput_savepath = 'Severity Output\';
 tabs_savepath = 'Behavior Tables\';
 
-
 %% ------------- HOUSEKEEPING --------------
 
 dt = char(datetime('today')); % Used for Daily & Publication figure savefile names
@@ -115,7 +114,7 @@ end
 
 % Import Master Key
 opts = detectImportOptions(masterSheet_flnm);
-opts = setvartype(opts, {'TagNumber','ID','Cage','Sex','TimeOfBehavior'}, 'categorical'); % Columns of the master key to be pulled in
+opts = setvartype(opts, {'TagNumber','ID','Cage','Sex','TimeOfBehavior','SessionWeightUpdated'}, 'categorical'); % Columns of the master key to be pulled in
 mKey = readtable(masterSheet_flnm, opts);
 
 % Create subdirectories
@@ -132,7 +131,7 @@ expKey = readtable(experimentKey_flnm);
 
 %% ------------- IMPORT DATA --------------
 if createNewMasterTable
-    mT = createMasterTable(beh_datapath, masterSheet_flnm, experimentKey_flnm, 'data_masterTable');
+    mT = createMasterTable(beh_datapath, masterSheet_flnm, experimentKey_flnm, 'data_masterTable', maxLatency);
 else
     load(masterTable_flnm)
 end
@@ -170,7 +169,7 @@ end
 
 % Weight Interpolation
 if interpWeights
-    mT = interpoweight(mT, interpWeight_sessions);
+    mT = interpoweight(mT, false); % second parameter determines whether individual animal weights will be plotted 
 end
 
 % Get data from the first hour of the session 
@@ -184,10 +183,12 @@ if firstHour; hour_groupStats = struct; end
 for et = 1:length(runType)
     groupStats.(char(runType(et))) = grpstats(mT(dex.(char(runType(et))),:), ["Sex", "Treatment", "Session"], ["mean", "sem"], ...
                           "DataVars",["ActiveLever", "InactiveLever", "EarnedInfusions", "HeadEntries", "Latency", "Intake"]);
+    
     if firstHour
         hour_groupStats.(char(runType(et))) = grpstats(hmT(dex.(char(runType(et))),:),["Sex", "Treatment", "Session"], ["mean", "sem"], ...
                                    "DataVars",["ActiveLever", "InactiveLever", "EarnedInfusions", "HeadEntries", "Latency", "Intake"]);
     end
+
     if saveTabs
         writeTabs(mT(dex.(char(runType(et))),:), [sub_dir, tabs_savepath, 'run_', char(runNum), '_exp_', char(runType(et)), '_inputData'], {'.mat', '.xlsx'})
         writeTabs(groupStats.(char(runType(et))), [sub_dir, tabs_savepath, 'run_', char(runNum), '_exp_', char(runType(et)), '_GroupStats'], {'.mat', '.xlsx'})
@@ -238,7 +239,7 @@ end
 %% ------------- WITHIN-SESSION ANALYSIS --------------
 
 if run_withinSession_analysis
-    fig_colors = {[.5,.5,.5], col_F_c57, col_M_c57, col_F_CD1, col_M_CD1};
+    fig_colors = {[.5,.5,.5], col_F_Dula, col_M_Dula, col_F_Cont, col_M_Cont};
     [mTDL, mPressT, mDrugsLT] = WithinSession_Processes(mT, dex, sub_dir, indivIntake_figs, indivIntakefigs_savepath, groupIntake_figs, groupIntakefigs_savepath, saveTabs, tabs_savepath, figsave_type, fig_colors);
 end
 
@@ -336,21 +337,22 @@ end
 if run_individualSusceptibility_analysis
 
     % subgroups of z-scored data to run correlations across
+    % subgroups of z-scored data to run correlations across
     corrGroups = {{{'all'}}, ...
-                  {{'Strain', 'c57'}}, ...
-                  {{'Strain', 'CD1'}}, ...
+                  {{'Treatment', 'Dulaglutide'}}, ...
+                  {{'Treatment', 'Vehicle'}}, ...
                   {{'Sex', 'Male'}}, ...
                   {{'Sex', 'Female'}}, ...
-                  {{'Strain', 'c57'}, {'Sex', 'Male'}}, ...
-                  {{'Strain', 'c57'}, {'Sex', 'Female'}}, ...
-                  {{'Strain', 'CD1'}, {'Sex', 'Male'}}, ...
-                  {{'Strain', 'CD1'}, {'Sex', 'Female'}}}; 
+                  {{'Treatment', 'Dulaglutide'}, {'Sex', 'Male'}}, ...
+                  {{'Treatment', 'Dulaglutide'}, {'Sex', 'Female'}}, ...
+                  {{'Treatment', 'Vehicle'}, {'Sex', 'Male'}}, ...
+                  {{'Treatment', 'Vehicle'}, {'Sex', 'Female'}}}; 
 
     % groups to show comparison violin plots for each individual
     % susceptibility metric
-    violSubsets = {{'all'}, {'all'}, {'Strain', 'c57'}, {'Strain', 'CD1'}};
-    violGroups = {'Strain', 'Sex', 'Sex', 'Sex'};
-    violLabels = {'Strain', 'Sex', 'c57 Sex', 'CD1 Sex'};
+    violSubsets = {{'all'}, {'all'}, {'Treatment', 'Dulaglutide'}, {'Treatment', 'Vehicle'}};
+    violGroups = {'Treatment', 'Sex', 'Sex', 'Sex'};
+    violLabels = {'Treatment', 'Sex', 'Dulaglutide Sex', 'Vehicle Sex'};
 
     pcaGroups = corrGroups;
 

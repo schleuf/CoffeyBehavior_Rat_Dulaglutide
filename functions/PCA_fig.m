@@ -1,9 +1,9 @@
 function PCA_fig(ivZT, PCA, sub_dir, subfolder, suffix, figsave_type)
     
-    male_c57 = [0, 187/255, 144/255];
-    female_c57 = [1, 107/255, 74/255];
-    male_CD1 = [163/255, 137/255, 1];
-    female_CD1 = [198/255, 151/255, 0];
+    male_Dula = [0, 187/255, 144/255];
+    female_Dula = [1, 107/255, 74/255];
+    male_Cont = [163/255, 137/255, 1];
+    female_Cont = [198/255, 151/255, 0];
 
     groups = fieldnames(PCA);
 
@@ -47,14 +47,14 @@ function PCA_fig(ivZT, PCA, sub_dir, subfolder, suffix, figsave_type)
 
             h1(i).MarkerEdgeColor=[0 .0 0];
             h1(i).MarkerSize=R(i-data_ind1 + 1);
-            if this_ivZT.Strain(i - data_ind1 + 1) == 'c57' && this_ivZT.Sex(i - data_ind1 + 1) == 'Male'
-                h1(i).MarkerFaceColor = male_c57;
-            elseif this_ivZT.Strain(i - data_ind1 + 1) == 'c57' && this_ivZT.Sex(i - data_ind1 + 1) == 'Female'
-                h1(i).MarkerFaceColor = female_c57;
-            elseif this_ivZT.Strain(i - data_ind1 + 1) == 'CD1' && this_ivZT.Sex(i - data_ind1 + 1) == 'Male'
-                 h1(i).MarkerFaceColor = male_CD1;
-            elseif this_ivZT.Strain(i - data_ind1 + 1) == 'CD1' && this_ivZT.Sex(i - data_ind1 + 1) == 'Female'
-                 h1(i).MarkerFaceColor = female_CD1;
+            if this_ivZT.Treatment(i - data_ind1 + 1) == 'Dulaglutide' && this_ivZT.Sex(i - data_ind1 + 1) == 'Male'
+                h1(i).MarkerFaceColor = male_Dula;
+            elseif this_ivZT.Treatment(i - data_ind1 + 1) == 'Dulaglutide' && this_ivZT.Sex(i - data_ind1 + 1) == 'Female'
+                h1(i).MarkerFaceColor = female_Dula;
+            elseif this_ivZT.Treatment(i - data_ind1 + 1) == 'Vehicle' && this_ivZT.Sex(i - data_ind1 + 1) == 'Male'
+                 h1(i).MarkerFaceColor = male_Cont;
+            elseif this_ivZT.Treatment(i - data_ind1 + 1) == 'Vehicle' && this_ivZT.Sex(i - data_ind1 + 1) == 'Female'
+                 h1(i).MarkerFaceColor = female_Cont;
             end
             
     
@@ -73,11 +73,11 @@ function PCA_fig(ivZT, PCA, sub_dir, subfolder, suffix, figsave_type)
     
         pcTable = [this_ivZT, table(PC1, PC2)];
         f1 = figure('color','w','position',[100 100 800 650]);
-        g = gramm('x', pcTable.PC1, 'y', pcTable.PC2, 'color', pcTable.Sex, 'marker', pcTable.Strain, 'lightness', pcTable.Class);
+        g = gramm('x', pcTable.PC1, 'y', pcTable.PC2, 'color', pcTable.Sex, 'marker', pcTable.Treatment, 'lightness', pcTable.Class);
         g.set_order_options('lightness', {'Low', 'Mid', 'High'});
         g.set_color_options('hue_range',[50 542.5],'chroma',80,'lightness',60,'n_color',2);
         g.geom_point();
-        g.set_names('x','PC1','y','PC2','color','Sex', 'marker', 'Strain', 'lightness', 'Class');
+        g.set_names('x','PC1','y','PC2','color','Sex', 'marker', 'Treatment', 'lightness', 'Class');
         g.axe_property('FontSize',12,'LineWidth',1.5,'TickDir','out');
         g.set_order_options('lightness',{'High','Mid','Low'});
         g.set_point_options('base_size',8);

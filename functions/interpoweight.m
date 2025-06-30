@@ -1,15 +1,22 @@
-function [mT] = interpoweight(mT, interp_sessions)
+function [mT] = interpoweight(mT, plotWeight)
     tags = unique(mT.TagNumber);
     for t = 1:length(tags)
+        interp_sessions = char(unique(mT.SessionWeightUpdated(mT.TagNumber == tags(t))));
+        interp_sessions = interp_sessions(2:end-1);
+        interp_sessions = cell2mat(cellfun(@(s) sscanf(s, '%d,'), cellstr(interp_sessions), 'UniformOutput', false));
+
+        
         % disp(tags(t))
         weights = mT.Weight(mT.TagNumber == tags(t));
         sessions = mT.Session(mT.TagNumber == tags(t));
-
-        % figure
-        % hold on
-        % plot(sessions, weights, 'Marker', '.')
-        % title([tags(t), ' weights'])
-        % hold off
+        
+        if plotWeight
+            figure
+            hold on
+            plot(sessions, weights, 'Marker', '.')
+            title([tags(t), ' weights'])
+            hold off
+        end
 
         temp = weights;
         for s = 1:length(interp_sessions)-1
@@ -28,9 +35,11 @@ function [mT] = interpoweight(mT, interp_sessions)
             end
         end
         mT.Weight(mT.TagNumber == tags(t)) = temp;
-        % 
-        % hold on
-        % plot(sessions, temp)
-        % hold off
+        
+        if plotWeight
+            hold on
+            plot(sessions, temp)
+            hold off
+        end
     end
 end
